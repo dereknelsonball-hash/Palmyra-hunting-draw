@@ -1,155 +1,213 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Palmyra Hunting Club</title>
-<style>
-* { box-sizing: border-box; }
-body { margin:0; font-family:Arial,sans-serif; background:#14271d; color:white; min-height:100vh; display:grid; place-items:center; padding:20px; }
-.card { background:#233d2d; padding:30px; border-radius:16px; width:100%; max-width:420px; text-align:center; }
-h1 { margin-bottom:8px; }
-p { color:#d0dfd2; line-height:1.5; }
-input,button { width:100%; padding:15px; margin-top:12px; border-radius:8px; font-size:16px; }
-input { border:1px solid #abb9ad; background:white; color:#172b1e; }
-button { border:none; background:#b8a36a; color:#14271d; font-weight:bold; cursor:pointer; }
-button:disabled { opacity:.6; cursor:wait; }
-.hidden { display:none; }
-#message { margin-top:18px; overflow-wrap:anywhere; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Palmyra Hunting Club</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #14271d;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+    .card {
+      width: 100%;
+      max-width: 420px;
+      padding: 30px;
+      border-radius: 16px;
+      background: #233d2d;
+      text-align: center;
+    }
+    h1 { margin-bottom: 8px; }
+    p { color: #d0dfd2; line-height: 1.5; }
+    input, button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 12px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    input {
+      border: 1px solid #abb9ad;
+      background: white;
+      color: #172b1e;
+    }
+    button {
+      border: none;
+      background: #b8a36a;
+      color: #14271d;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; }
+    .hidden { display: none; }
+    #message { overflow-wrap: anywhere; }
+  </style>
 </head>
 <body>
-<main class="card">
-<h1>Palmyra Hunting Club</h1>
-<p>Member Hunting Draw</p>
+  <main class="card">
+    <h1>Palmyra Hunting Club</h1>
+    <p>Member Hunting Draw</p>
 
-<section id="emailStep">
-<input id="email" type="email" autocomplete="email" placeholder="Enter your email">
-<button id="sendBtn">Send Login Code</button>
-</section>
+    <section id="loginStep">
+      <input
+        id="email"
+        type="email"
+        autocomplete="email"
+        placeholder="Enter your email"
+      >
+      <button id="loginBtn">Email Me a Login Link</button>
+    </section>
 
-<section id="codeStep" class="hidden">
-<p>Enter the code sent to your email.</p>
-<input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">
-<button id="verifyBtn">Verify Code</button>
-<button id="backBtn">Change Email</button>
-</section>
+    <section id="welcomeStep" class="hidden">
+      <h2 id="welcomeName">Welcome!</h2>
+      <p>Your hunter login is working.</p>
+      <p>The hunting draw screen will be added next.</p>
+      <button id="logoutBtn">Log Out</button>
+    </section>
 
-<section id="welcomeStep" class="hidden">
-<h2 id="welcomeName">Welcome!</h2>
-<p>Your hunter login is working.</p>
-<p>The hunting draw screen will be added next.</p>
-<button id="logoutBtn">Log Out</button>
-</section>
+    <p id="message" role="status" aria-live="polite">
+      Checking login...
+    </p>
+  </main>
 
-<p id="message" role="status" aria-live="polite"></p>
-</main>
+  <script type="module">
+    import { createClient } from
+      'https://esm.sh/@supabase/supabase-js@2';
 
-<script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+    const SUPABASE_URL =
+      'https://hxmkjliyswxphcguwdrh.supabase.co';
 
-const SUPABASE_URL = 'https://hxmkjliyswxphcguwdrh.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_rG1_vYk-0uaCSk21eQt4vw_OfY-0I9O';
-const supabase = createClient(SUPABASE_URL,SUPABASE_KEY);
+    const SUPABASE_KEY =
+      'sb_publishable_rG1_vYk-0uaCSk21eQt4vw_OfY-0I9O';
 
-const emailStep=document.getElementById('emailStep');
-const codeStep=document.getElementById('codeStep');
-const welcomeStep=document.getElementById('welcomeStep');
-const message=document.getElementById('message');
-const emailInput=document.getElementById('email');
-const codeInput=document.getElementById('code');
+    const SITE_URL =
+      'https://dereknelsonball-hash.github.io/Palmyra-hunting-draw/';
 
-function show(step){
-  emailStep.classList.add('hidden');
-  codeStep.classList.add('hidden');
-  welcomeStep.classList.add('hidden');
-  step.classList.remove('hidden');
-  message.textContent='';
-}
+    const supabase = createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY,
+      {
+        auth: {
+          detectSessionInUrl: true,
+          persistSession: true
+        }
+      }
+    );
 
-async function loadMember(user){
-  const {data,error}=await supabase
-    .from('memberships')
-    .select('display_name,active')
-    .eq('user_id',user.id)
-    .eq('active',true)
-    .maybeSingle();
+    const loginStep = document.getElementById('loginStep');
+    const welcomeStep = document.getElementById('welcomeStep');
+    const message = document.getElementById('message');
+    const loginBtn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('email');
 
-  if(error||!data){
-    await supabase.auth.signOut();
-    show(emailStep);
-    message.textContent='Your email is not linked to an active Palmyra membership. Contact the club administrator.';
-    return;
-  }
+    function showLogin(text = '') {
+      loginStep.classList.remove('hidden');
+      welcomeStep.classList.add('hidden');
+      message.textContent = text;
+    }
 
-  document.getElementById('welcomeName').textContent='Welcome, '+data.display_name;
-  show(welcomeStep);
-}
+    async function loadMember(user) {
+      const { data, error } = await supabase
+        .from('memberships')
+        .select('display_name, active')
+        .eq('user_id', user.id)
+        .eq('active', true)
+        .maybeSingle();
 
-document.getElementById('sendBtn').addEventListener('click',async()=>{
-  const email=emailInput.value.trim();
-  if(!email){
-    message.textContent='Enter your email address.';
-    return;
-  }
+      if (error || !data) {
+        await supabase.auth.signOut();
+        showLogin(
+          'Your email is not linked to an active Palmyra membership.'
+        );
+        return;
+      }
 
-  const btn=document.getElementById('sendBtn');
-  btn.disabled=true;
-  message.textContent='Sending code...';
+      document.getElementById('welcomeName').textContent =
+        'Welcome, ' + data.display_name;
 
-  const {error}=await supabase.auth.signInWithOtp({
-    email,
-    options:{shouldCreateUser:false}
-  });
+      loginStep.classList.add('hidden');
+      welcomeStep.classList.remove('hidden');
+      message.textContent = '';
+    }
 
-  btn.disabled=false;
+    loginBtn.addEventListener('click', async () => {
+      const email = emailInput.value.trim();
 
-  if(error){
-    message.textContent=error.message;
-    return;
-  }
+      if (!email) {
+        message.textContent = 'Please enter your email.';
+        return;
+      }
 
-  show(codeStep);
-  message.textContent='Check your email for the login code.';
-});
+      loginBtn.disabled = true;
+      message.textContent = 'Sending login link...';
 
-document.getElementById('verifyBtn').addEventListener('click',async()=>{
-  const token=codeInput.value.trim();
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: false,
+          emailRedirectTo: SITE_URL
+        }
+      });
 
-  if(!/^\d{6}$/.test(token)){
-    message.textContent='Enter the 6-digit code.';
-    return;
-  }
+      loginBtn.disabled = false;
 
-  const btn=document.getElementById('verifyBtn');
-  btn.disabled=true;
-  message.textContent='Verifying...';
+      if (error) {
+        message.textContent = error.message;
+        return;
+      }
 
-  const {data,error}=await supabase.auth.verifyOtp({
-    email:emailInput.value.trim(),
-    token,
-    type:'email'
-  });
+      message.textContent =
+        'Check your email and click the login link. ' +
+        'Return here if your email opens in another browser.';
+    });
 
-  btn.disabled=false;
+    document.getElementById('logoutBtn')
+      .addEventListener('click', async () => {
+        const { error } = await supabase.auth.signOut();
 
-  if(error){
-    message.textContent=error.message;
-    return;
-  }
+        if (error) {
+          message.textContent = error.message;
+          return;
+        }
 
-  if(data.user)await loadMember(data.user);
-});
+        showLogin('You have logged out.');
+      });
 
-document.getElementById('backBtn').addEventListener('click',()=>show(emailStep));
+    async function checkLogin() {
+      const params = new URLSearchParams(window.location.search);
+      const authError =
+        params.get('error_description') ||
+        params.get('error');
 
-document.getElementById('logoutBtn').addEventListener('click',async()=>{
-  await supabase.auth.signOut();
-  show(emailStep);
-});
+      if (authError) {
+        showLogin(authError.replace(/\+/g, ' '));
+        return;
+      }
 
-const {data:{user}}=await supabase.auth.getUser();
-if(user)await loadMember(user);
-</script>
+      const { data, error } = await supabase.auth.getUser();
+
+      if (error || !data.user) {
+        showLogin();
+        return;
+      }
+
+      await loadMember(data.user);
+    }
+
+    await checkLogin();
+
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN') {
+        setTimeout(checkLogin, 0);
+      }
+    });
+  </script>
 </body>
 </html>
