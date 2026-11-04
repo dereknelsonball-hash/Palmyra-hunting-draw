@@ -1,213 +1,429 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Palmyra Hunting Club</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 20px;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: #14271d;
-      color: white;
-      font-family: Arial, sans-serif;
-    }
-    .card {
-      width: 100%;
-      max-width: 420px;
-      padding: 30px;
-      border-radius: 16px;
-      background: #233d2d;
-      text-align: center;
-    }
-    h1 { margin-bottom: 8px; }
-    p { color: #d0dfd2; line-height: 1.5; }
-    input, button {
-      width: 100%;
-      padding: 15px;
-      margin-top: 12px;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-    input {
-      border: 1px solid #abb9ad;
-      background: white;
-      color: #172b1e;
-    }
-    button {
-      border: none;
-      background: #b8a36a;
-      color: #14271d;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    button:disabled { opacity: 0.6; }
-    .hidden { display: none; }
-    #message { overflow-wrap: anywhere; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Palmyra Hunting Club Draw</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#14271d;color:#fff;font-family:Arial,sans-serif;padding:16px}
+main{max-width:850px;margin:auto}
+header{text-align:center;padding:22px 0}
+h1{margin:0;font-size:28px}
+h2{font-size:20px;margin:0 0 14px}
+p{line-height:1.5}
+.card{background:#233d2d;border-radius:14px;padding:20px;margin-bottom:16px}
+input,button{font-size:16px;padding:13px;border-radius:8px}
+input{width:100%;border:1px solid #aab8ac}
+button{border:0;background:#c7b174;color:#14271d;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+.full{width:100%;margin-top:12px}
+.hidden{display:none}
+.muted{color:#cbd8cd}
+.small{font-size:13px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.tag{background:#365741;border-radius:8px;padding:7px 10px}
+.timer{font-size:38px;font-weight:bold;color:#f4d47e}
+.area{padding:12px;border-bottom:1px solid #45634d;display:flex;justify-content:space-between;gap:12px}
+.area:last-child{border:0}
+.available{color:#a7e3b1}
+.taken{color:#e5b0a6}
+.hunter{padding:9px;border-bottom:1px solid #45634d}
+.current{background:#3e6347;border-radius:6px;font-weight:bold}
+#message{overflow-wrap:anywhere}
+</style>
 </head>
 <body>
-  <main class="card">
-    <h1>Palmyra Hunting Club</h1>
-    <p>Member Hunting Draw</p>
+<main>
+<header>
+<h1>Palmyra Hunting Club</h1>
+<p class="muted">Hunting Area Draw</p>
+</header>
 
-    <section id="loginStep">
-      <input
-        id="email"
-        type="email"
-        autocomplete="email"
-        placeholder="Enter your email"
-      >
-      <button id="loginBtn">Email Me a Login Link</button>
-    </section>
+<section id="loginScreen" class="card">
+<h2>Member Login</h2>
+<p>Enter your registered email to receive a login link.</p>
+<input id="email" type="email" placeholder="Email address" autocomplete="email">
+<button id="loginBtn" class="full">Email Me a Login Link</button>
+<p id="loginMessage" class="muted" role="status"></p>
+</section>
 
-    <section id="welcomeStep" class="hidden">
-      <h2 id="welcomeName">Welcome!</h2>
-      <p>Your hunter login is working.</p>
-      <p>The hunting draw screen will be added next.</p>
-      <button id="logoutBtn">Log Out</button>
-    </section>
+<section id="appScreen" class="hidden">
+<div class="card">
+<div class="row">
+<strong id="memberName">Hunter</strong>
+<button id="logoutBtn">Log Out</button>
+</div>
+</div>
 
-    <p id="message" role="status" aria-live="polite">
-      Checking login...
-    </p>
-  </main>
+<div class="card">
+<h2>Hunting Draw</h2>
+<label for="sessionSelect">Select hunt</label>
+<select id="sessionSelect" style="width:100%;padding:12px;margin-top:8px;border-radius:8px"></select>
+<p id="drawStatus" class="muted">Loading...</p>
+<div class="row">
+<div>
+<div class="small muted">Current hunter</div>
+<h2 id="currentHunter">—</h2>
+</div>
+<div style="text-align:right">
+<div class="small muted">Time remaining</div>
+<div id="timer" class="timer">--:--</div>
+</div>
+</div>
+<p id="roundInfo" class="muted"></p>
+</div>
 
-  <script type="module">
-    import { createClient } from
-      'https://esm.sh/@supabase/supabase-js@2';
+<div class="card">
+<h2>My Hunting Areas</h2>
+<div id="myAreas" class="muted">No selections yet.</div>
+</div>
 
-    const SUPABASE_URL =
-      'https://hxmkjliyswxphcguwdrh.supabase.co';
+<div class="card">
+<h2>Available Hunting Areas</h2>
+<p class="small muted">Viewing only. Area selection will be enabled after testing.</p>
+<div id="areasList">Loading...</div>
+</div>
 
-    const SUPABASE_KEY =
-      'sb_publishable_rG1_vYk-0uaCSk21eQt4vw_OfY-0I9O';
+<div class="card">
+<h2>Randomized Hunter Order</h2>
+<div id="hunterOrder">Loading...</div>
+</div>
 
-    const SITE_URL =
-      'https://dereknelsonball-hash.github.io/Palmyra-hunting-draw/';
+<button id="refreshBtn" class="full">Refresh Draw</button>
+<p id="appMessage" role="status"></p>
+</section>
+</main>
 
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_KEY,
-      {
-        auth: {
-          detectSessionInUrl: true,
-          persistSession: true
-        }
-      }
+<script type="module">
+import {createClient} from 'https://esm.sh/@supabase/supabase-js@2';
+
+const URL='https://hxmkjliyswxphcguwdrh.supabase.co';
+const KEY='sb_publishable_rG1_vYk-0uaCSk21eQt4vw_OfY-0I9O';
+const SITE='https://dereknelsonball-hash.github.io/Palmyra-hunting-draw/';
+
+const supabase=createClient(URL,KEY,{
+  auth:{detectSessionInUrl:true,persistSession:true}
+});
+
+const el=id=>document.getElementById(id);
+let member=null;
+let sessions=[];
+let selectedSession=null;
+let currentDraw=null;
+let refreshBusy=false;
+
+function text(id,value){el(id).textContent=value}
+function showLogin(message=''){
+  el('loginScreen').classList.remove('hidden');
+  el('appScreen').classList.add('hidden');
+  text('loginMessage',message);
+}
+function showApp(){
+  el('loginScreen').classList.add('hidden');
+  el('appScreen').classList.remove('hidden');
+}
+
+function formatDate(date){
+  return new Date(date+'T12:00:00').toLocaleDateString('en-US',{
+    month:'short',day:'numeric',year:'numeric'
+  });
+}
+
+async function loadMember(user){
+  const {data,error}=await supabase.from('memberships')
+    .select('id,display_name,active')
+    .eq('user_id',user.id)
+    .eq('active',true)
+    .maybeSingle();
+
+  if(error||!data){
+    await supabase.auth.signOut();
+    member=null;
+    showLogin('Your email is not linked to an active Palmyra membership.');
+    return;
+  }
+
+  member=data;
+  text('memberName',data.display_name);
+  showApp();
+  await loadSessions();
+}
+
+async function loadSessions(){
+  const {data,error}=await supabase.from('draw_sessions')
+    .select('id,hunt_date,hunt_type,draw_time,cutoff_time,status,current_round,current_position,turn_expires_at')
+    .order('hunt_date',{ascending:false})
+    .limit(40);
+
+  if(error){
+    text('appMessage','Unable to load draws: '+error.message);
+    return;
+  }
+
+  sessions=data||[];
+  const select=el('sessionSelect');
+  const previous=selectedSession;
+  select.replaceChildren();
+
+  if(!sessions.length){
+    const option=document.createElement('option');
+    option.textContent='No hunting draws scheduled';
+    option.value='';
+    select.append(option);
+    selectedSession=null;
+    currentDraw=null;
+    text('drawStatus','No draws have been created yet.');
+    text('areasList','No draw selected.');
+    text('hunterOrder','No draw selected.');
+    text('myAreas','No selections yet.');
+    return;
+  }
+
+  sessions.forEach(s=>{
+    const option=document.createElement('option');
+    option.value=s.id;
+    option.textContent=formatDate(s.hunt_date)+' — '+s.hunt_type;
+    select.append(option);
+  });
+
+  selectedSession=sessions.some(s=>s.id===previous)
+    ?previous:sessions[0].id;
+  select.value=selectedSession;
+  await loadDraw();
+}
+
+async function loadDraw(){
+  if(!selectedSession||!member||refreshBusy)return;
+  refreshBusy=true;
+
+  try{
+    const {data:draw,error:drawError}=await supabase
+      .from('draw_sessions')
+      .select('id,hunt_date,hunt_type,draw_time,cutoff_time,status,current_round,current_position,turn_expires_at')
+      .eq('id',selectedSession)
+      .single();
+
+    if(drawError)throw drawError;
+    currentDraw=draw;
+
+    const [participantsResult,areasResult,assignmentsResult]=
+      await Promise.all([
+        supabase.from('draw_participants')
+          .select('membership_id,draw_position,skipped_rounds')
+          .eq('session_id',draw.id)
+          .order('draw_position'),
+        supabase.from('hunting_areas')
+          .select('id,name,active')
+          .eq('active',true)
+          .order('name'),
+        supabase.from('area_assignments')
+          .select('membership_id,area_id,round_number,released_at')
+          .eq('session_id',draw.id)
+          .is('released_at',null)
+      ]);
+
+    if(participantsResult.error)throw participantsResult.error;
+    if(areasResult.error)throw areasResult.error;
+    if(assignmentsResult.error)throw assignmentsResult.error;
+
+    const participants=participantsResult.data||[];
+    const areas=areasResult.data||[];
+    const assignments=assignmentsResult.data||[];
+
+    const ids=[...new Set(participants.map(p=>p.membership_id))];
+    let names=new Map();
+
+    if(ids.length){
+      const {data:members,error:memberError}=await supabase
+        .from('memberships')
+        .select('id,display_name')
+        .in('id',ids);
+
+      if(memberError)throw memberError;
+      names=new Map((members||[]).map(m=>[m.id,m.display_name]));
+    }
+
+    const current=participants.find(
+      p=>p.draw_position===draw.current_position
     );
 
-    const loginStep = document.getElementById('loginStep');
-    const welcomeStep = document.getElementById('welcomeStep');
-    const message = document.getElementById('message');
-    const loginBtn = document.getElementById('loginBtn');
-    const emailInput = document.getElementById('email');
+    text('drawStatus',
+      draw.status.toUpperCase()+
+      ' | '+formatDate(draw.hunt_date)+
+      ' | '+draw.hunt_type
+    );
 
-    function showLogin(text = '') {
-      loginStep.classList.remove('hidden');
-      welcomeStep.classList.add('hidden');
-      message.textContent = text;
-    }
+    text('currentHunter',
+      draw.status==='drawing'&&current
+        ?(names.get(current.membership_id)||'Hunter')
+        :'No active turn'
+    );
 
-    async function loadMember(user) {
-      const { data, error } = await supabase
-        .from('memberships')
-        .select('display_name, active')
-        .eq('user_id', user.id)
-        .eq('active', true)
-        .maybeSingle();
+    text('roundInfo',
+      draw.current_round
+        ?'Round '+draw.current_round+' of 3'
+        :'Draw not currently assigning turns'
+    );
 
-      if (error || !data) {
-        await supabase.auth.signOut();
-        showLogin(
-          'Your email is not linked to an active Palmyra membership.'
-        );
-        return;
-      }
+    const order=el('hunterOrder');
+    order.replaceChildren();
 
-      document.getElementById('welcomeName').textContent =
-        'Welcome, ' + data.display_name;
-
-      loginStep.classList.add('hidden');
-      welcomeStep.classList.remove('hidden');
-      message.textContent = '';
-    }
-
-    loginBtn.addEventListener('click', async () => {
-      const email = emailInput.value.trim();
-
-      if (!email) {
-        message.textContent = 'Please enter your email.';
-        return;
-      }
-
-      loginBtn.disabled = true;
-      message.textContent = 'Sending login link...';
-
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          shouldCreateUser: false,
-          emailRedirectTo: SITE_URL
-        }
-      });
-
-      loginBtn.disabled = false;
-
-      if (error) {
-        message.textContent = error.message;
-        return;
-      }
-
-      message.textContent =
-        'Check your email and click the login link. ' +
-        'Return here if your email opens in another browser.';
+    participants.forEach(p=>{
+      const div=document.createElement('div');
+      div.className='hunter'+(
+        draw.status==='drawing'&&
+        p.draw_position===draw.current_position
+          ?' current':''
+      );
+      div.textContent=
+        '#'+p.draw_position+' — '+
+        (names.get(p.membership_id)||'Hunter');
+      order.append(div);
     });
 
-    document.getElementById('logoutBtn')
-      .addEventListener('click', async () => {
-        const { error } = await supabase.auth.signOut();
+    const taken=new Map(
+      assignments.map(a=>[a.area_id,a])
+    );
 
-        if (error) {
-          message.textContent = error.message;
-          return;
-        }
+    const list=el('areasList');
+    list.replaceChildren();
 
-        showLogin('You have logged out.');
+    areas.forEach(a=>{
+      const div=document.createElement('div');
+      div.className='area';
+
+      const name=document.createElement('span');
+      name.textContent=a.name;
+
+      const status=document.createElement('span');
+      const assigned=taken.get(a.id);
+      status.className=assigned?'taken':'available';
+      status.textContent=assigned?'Selected':'Available';
+
+      div.append(name,status);
+      list.append(div);
+    });
+
+    const mine=assignments
+      .filter(a=>a.membership_id===member.id)
+      .sort((a,b)=>a.round_number-b.round_number);
+
+    const myList=el('myAreas');
+    myList.replaceChildren();
+
+    if(!mine.length){
+      myList.textContent='No selections yet.';
+    }else{
+      mine.forEach(a=>{
+        const div=document.createElement('p');
+        const area=areas.find(x=>x.id===a.area_id);
+        div.textContent='Round '+a.round_number+
+          ': '+(area?.name||'Unknown area');
+        myList.append(div);
       });
-
-    async function checkLogin() {
-      const params = new URLSearchParams(window.location.search);
-      const authError =
-        params.get('error_description') ||
-        params.get('error');
-
-      if (authError) {
-        showLogin(authError.replace(/\+/g, ' '));
-        return;
-      }
-
-      const { data, error } = await supabase.auth.getUser();
-
-      if (error || !data.user) {
-        showLogin();
-        return;
-      }
-
-      await loadMember(data.user);
     }
 
-    await checkLogin();
+    text('appMessage','');
+    updateTimer();
 
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN') {
-        setTimeout(checkLogin, 0);
-      }
-    });
-  </script>
+  }catch(error){
+    text('appMessage','Error loading draw: '+error.message);
+  }finally{
+    refreshBusy=false;
+  }
+}
+
+function updateTimer(){
+  if(!currentDraw||
+     currentDraw.status!=='drawing'||
+     !currentDraw.turn_expires_at){
+    text('timer','--:--');
+    return;
+  }
+
+  const seconds=Math.max(0,Math.ceil(
+    (new Date(currentDraw.turn_expires_at).getTime()-Date.now())/1000
+  ));
+
+  text('timer',
+    String(Math.floor(seconds/60)).padStart(2,'0')+
+    ':'+String(seconds%60).padStart(2,'0')
+  );
+}
+
+el('loginBtn').addEventListener('click',async()=>{
+  const email=el('email').value.trim();
+  if(!email){
+    text('loginMessage','Enter your email.');
+    return;
+  }
+
+  el('loginBtn').disabled=true;
+  text('loginMessage','Sending login link...');
+
+  const {error}=await supabase.auth.signInWithOtp({
+    email,
+    options:{
+      shouldCreateUser:false,
+      emailRedirectTo:SITE
+    }
+  });
+
+  el('loginBtn').disabled=false;
+  text('loginMessage',error
+    ?error.message
+    :'Check your email and click the newest login link.');
+});
+
+el('logoutBtn').addEventListener('click',async()=>{
+  await supabase.auth.signOut();
+  member=null;
+  showLogin('You have logged out.');
+});
+
+el('sessionSelect').addEventListener('change',async()=>{
+  selectedSession=el('sessionSelect').value;
+  currentDraw=null;
+  await loadDraw();
+});
+
+el('refreshBtn').addEventListener('click',loadSessions);
+
+async function checkLogin(){
+  const params=new URLSearchParams(window.location.search);
+  const authError=params.get('error_description')||params.get('error');
+
+  if(authError){
+    showLogin(authError.replace(/\+/g,' '));
+    return;
+  }
+
+  const {data,error}=await supabase.auth.getUser();
+
+  if(error||!data.user){
+    showLogin();
+    return;
+  }
+
+  await loadMember(data.user);
+}
+
+await checkLogin();
+
+supabase.auth.onAuthStateChange(event=>{
+  if(event==='SIGNED_IN'){
+    setTimeout(checkLogin,0);
+  }
+});
+
+setInterval(updateTimer,1000);
+
+setInterval(async()=>{
+  if(member&&selectedSession){
+    await loadDraw();
+  }
+},10000);
+</script>
 </body>
 </html>
