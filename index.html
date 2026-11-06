@@ -521,7 +521,9 @@ setInterval(refresh, 8000);
   <p id="gps-check-result" role="status" aria-live="polite"></p>
 </div>
 
-<script>
+<script type="module">
+  import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const gpsDb = createClient("https://hxmkjliyswxphcguwdrh.supabase.co", "sb_publishable_rG1_vYk-0uaCSk21eQt4vw_OfY-0I9O");
 (() => {
   const centerLat = 32.170371;
   const centerLon = -91.076844;
@@ -551,8 +553,53 @@ setInterval(refresh, 8000);
     result.textContent = "Checking your location...";
 
     navigator.geolocation.getCurrentPosition(
-      position => {
+      async position => {
         button.disabled = false;
+        try {
+  const { data: loginData, error: loginError } =
+    await gpsDb.auth.getSession();
+
+  if (loginError || !loginData.session) {
+    result.textContent = "Please log in before verifying GPS.";
+    return;
+  }
+
+  const { data: draws, error: drawError } = await gpsDb
+    .from("draw_sessions")
+    .select("id")
+    .in("status", ["pending", "drawing"])
+    .order("hunt_date", { ascending: true })
+    .limit(1);
+
+  if (drawError || !draws?.length) {
+    result.textContent = "No upcoming draw found.";
+    return;
+  }
+
+  const { data, error } = await gpsDb.functions.invoke(
+    "verify-hunter-gps",
+    {
+      body: {
+        session_id: draws[0].id,
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      }
+    }
+  );
+
+  if (error) {
+    result.textContent = data?.message ||
+      "GPS verification was rejected or could not be completed.";
+    return;
+  }
+
+  result.textContent = data?.message ||
+    "GPS verification request completed.";
+} catch (error) {
+  result.textContent = "GPS verification request failed.";
+}
+return;
 
         const distance = milesBetween(
           position.coords.latitude,
