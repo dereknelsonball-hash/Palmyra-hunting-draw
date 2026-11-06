@@ -512,5 +512,81 @@ await checkLogin();
 setInterval(updateTimer, 1000);
 setInterval(refresh, 8000);
 </script>
+  <div id="palmyra-gps" style="max-width:900px;margin:24px auto;padding:20px;background:#1d382a;color:white;border:1px solid #48634e;border-radius:12px">
+  <h2>GPS Location Check</h2>
+  <p>Verify your location before participating in the draw.</p>
+  <button id="gps-check-button" type="button" style="padding:14px 20px;background:#b99b56;color:#10241b;border:0;border-radius:8px;font-weight:bold;cursor:pointer">
+    Check My GPS Location
+  </button>
+  <p id="gps-check-result" role="status" aria-live="polite"></p>
+</div>
+
+<script>
+(() => {
+  const centerLat = 32.170371;
+  const centerLon = -91.076844;
+  const maxDistanceMiles = 10;
+
+  const button = document.getElementById("gps-check-button");
+  const result = document.getElementById("gps-check-result");
+
+  function milesBetween(lat1, lon1, lat2, lon2) {
+    const rad = Math.PI / 180;
+    const a =
+      Math.sin((lat2 - lat1) * rad / 2) ** 2 +
+      Math.cos(lat1 * rad) *
+      Math.cos(lat2 * rad) *
+      Math.sin((lon2 - lon1) * rad / 2) ** 2;
+
+    return 3958.8 * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  button.addEventListener("click", () => {
+    if (!navigator.geolocation) {
+      result.textContent = "GPS is not supported on this device.";
+      return;
+    }
+
+    button.disabled = true;
+    result.textContent = "Checking your location...";
+
+    navigator.geolocation.getCurrentPosition(
+      position => {
+        button.disabled = false;
+
+        const distance = milesBetween(
+          position.coords.latitude,
+          position.coords.longitude,
+          centerLat,
+          centerLon
+        );
+
+        const accuracy = position.coords.accuracy / 1609.344;
+
+        if (distance + accuracy <= maxDistanceMiles) {
+          result.textContent =
+            "GPS check passed. You are within the allowed area.";
+        } else if (distance - accuracy > maxDistanceMiles) {
+          result.textContent =
+            "GPS check failed. You appear to be outside the allowed area.";
+        } else {
+          result.textContent =
+            "Location uncertain. Try again with better GPS accuracy.";
+        }
+      },
+      error => {
+        button.disabled = false;
+        result.textContent =
+          "Unable to verify location: " + error.message;
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 20000,
+        maximumAge: 0
+      }
+    );
+  });
+})();
+</script>
 </body>
 </html>
