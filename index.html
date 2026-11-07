@@ -433,8 +433,8 @@ if (!assigned) {
   button.textContent = "Select Area";
   button.disabled = false;
 button.addEventListener("click", () => {
-  setMessage("You selected " + area.name +
-    ". GPS verification is required before confirming.");
+  alert("You selected " + area.name +
+  ". GPS verification is required before confirming.");
 });
   button.title = "Selection requires GPS verification";
   button.style.marginLeft = "12px";
