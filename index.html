@@ -467,7 +467,7 @@ if (!assigned) {
   const button = document.createElement("button");
   button.textContent = "Select Area";
   button.disabled = false;
-button.addEventListener("click", () => {
+button.addEventListener("click", async () => {
   const round = getSelectionRound();
 const mine = participants.find(
   p => p.membership_id === member?.id
@@ -482,11 +482,20 @@ if (round === null) {
   return;
 }
 
-alert(
-  "Area: " + area.name +
-  "\nRound: " + round +
-  "\nGPS verification required before confirming."
-);
+const { data, error } = await db.rpc("palmyra_select_area", {
+  p_session_id: session.id,
+  p_area_id: area.id,
+  p_latitude: null,
+  p_longitude: null,
+  p_round: round
+});
+
+if (error) {
+  alert("Selection failed: " + error.message);
+} else {
+  alert("Area selected successfully!");
+  await loadDraw();
+}
 });
   button.title = "Selection requires GPS verification";
  
