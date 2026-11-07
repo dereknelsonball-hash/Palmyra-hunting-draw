@@ -422,11 +422,20 @@ function renderAreas() {
         assigned.round_number + ")"
       : area.name + " — Available";
 
-    addLine(
-      list,
-      description,
-      "area " + (assigned ? "taken" : "available")
-    );
+    const row = addLine(
+  list,
+  description,
+  "area " + (assigned ? "taken" : "available")
+);
+
+if (!assigned) {
+  const button = document.createElement("button");
+  button.textContent = "Select Area";
+  button.disabled = true;
+  button.title = "Selection requires GPS verification";
+  button.style.marginLeft = "12px";
+  row.appendChild(button);
+}
   }
 }
 
