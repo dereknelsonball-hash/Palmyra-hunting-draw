@@ -343,7 +343,7 @@ async function refresh() {
     const [peopleResult, assignmentResult] =
       await Promise.all([
         db.from("draw_participants")
-          .select("membership_id,draw_position,skipped_rounds")
+          .select("membership_id,draw_position,skipped_rounds,gps_verified_at")
           .eq("session_id", session.id)
           .order("draw_position"),
         db.from("area_assignments")
