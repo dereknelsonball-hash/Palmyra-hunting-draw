@@ -469,7 +469,14 @@ if (!assigned) {
   button.disabled = false;
 button.addEventListener("click", () => {
   const round = getSelectionRound();
+const mine = participants.find(
+  p => p.membership_id === member?.id
+);
 
+if (!mine?.gps_verified_at) {
+  alert("GPS verification required. Please verify your location before selecting an area.");
+  return;
+}
 if (round === null) {
   alert("You have no eligible selection right now.");
   return;
