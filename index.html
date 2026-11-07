@@ -402,7 +402,42 @@ function render() {
   renderHunters();
   updateTimer();
 }
+function getSelectionRound() {
+  if (!session || !member) return null;
 
+  const mine = participants.find(
+    p => p.membership_id === member.id
+  );
+
+  if (!mine) return null;
+
+  const myRounds = assignments
+    .filter(a => a.membership_id === member.id)
+    .map(a => a.round_number);
+
+  // Current turn takes priority.
+  if (
+    session.status === "drawing" &&
+    session.current_position === mine.draw_position &&
+    session.current_round &&
+    !myRounds.includes(session.current_round) &&
+    new Date(session.turn_expires_at).getTime() > Date.now()
+  ) {
+    return session.current_round;
+  }
+
+  // Otherwise, make up the earliest skipped round.
+  for (const round of [1, 2, 3]) {
+    if (
+      (mine.skipped_rounds || []).includes(round) &&
+      !myRounds.includes(round)
+    ) {
+      return round;
+    }
+  }
+
+  return null;
+}
 function renderAreas() {
   const list = $("areaList");
   clear(list);
