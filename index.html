@@ -601,7 +601,35 @@ if (
   });
 
   row.appendChild(changeButton);
-}
+const releaseButton = document.createElement("button");
+releaseButton.textContent = "Release Area";
+releaseButton.style.marginLeft = "12px";
+
+releaseButton.addEventListener("click", async () => {
+  if (!confirm("Are you sure you want to release this hunting area? It will become available to other hunters.")) {
+    return;
+  }
+
+  releaseButton.disabled = true;
+
+  try {
+    const { error } = await db.rpc("palmyra_release_area", {
+      p_assignment_id: assigned.id
+    });
+
+    if (error) {
+      alert("Release failed: " + error.message);
+    } else {
+      alert("Area released successfully!");
+      await loadDraw();
+    }
+  } finally {
+    releaseButton.disabled = false;
+  }
+});
+
+row.appendChild(releaseButton);
+  }
   }
 }
 
