@@ -411,9 +411,11 @@ function getSelectionRound() {
   if (!mine) return null;
 
   const myRounds = assignments
-    .filter(a => a.membership_id === member.id)
-    .map(a => a.round_number);
-
+  .filter(a =>
+    a.membership_id === member.id &&
+    a.released_at === null
+  )
+  .map(a => a.round_number);
   // Current turn takes priority.
   if (
     session.status === "drawing" &&
