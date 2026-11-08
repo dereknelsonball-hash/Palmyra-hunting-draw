@@ -504,6 +504,83 @@ if (error) {
   button.style.marginLeft = "12px";
   row.appendChild(button);
 }
+if (
+  assigned &&
+  assigned.membership_id === member?.id &&
+  assigned.released_at === null
+) {
+  const changedBefore = assignments.some(a =>
+    a.membership_id === member.id &&
+    a.round_number === assigned.round_number &&
+    a.released_at !== null
+  );
+
+  const changeButton = document.createElement("button");
+  changeButton.textContent = changedBefore
+    ? "Change Used"
+    : "Change Area";
+
+  changeButton.disabled = changedBefore;
+  changeButton.style.marginLeft = "12px";
+
+  changeButton.addEventListener("click", async () => {
+    if (
+      !session ||
+      session.status !== "drawing" ||
+      new Date(session.cutoff_time) <= new Date()
+    ) {
+      alert("The draw is closed.");
+      return;
+    }
+
+    const available = areas.filter(a =>
+      !assignments.some(x =>
+        x.area_id === a.id && x.released_at === null
+      )
+    );
+
+    const choice = prompt(
+      "Enter the replacement area name:\n" +
+      available.map(a => a.name).join("\n")
+    );
+
+    if (!choice) return;
+
+    const replacement = available.find(a =>
+      a.name.toLowerCase() === choice.trim().toLowerCase()
+    );
+
+    if (!replacement) {
+      alert("Invalid or unavailable area.");
+      return;
+    }
+
+    if (!confirm(
+      "Change to " + replacement.name +
+      "? Only one change is allowed per round."
+    )) return;
+
+    changeButton.disabled = true;
+
+    try {
+      const { error } = await db.rpc("palmyra_change_area", {
+        p_assignment_id: assigned.id,
+        p_new_area_id: replacement.id
+      });
+
+      if (error) {
+        alert("Change failed: " + error.message);
+      } else {
+        alert("Area changed successfully!");
+        await loadDraw();
+      }
+    } finally {
+      changeButton.disabled = false;
+    }
+  });
+
+  row.appendChild(changeButton);
+}
   }
 }
 
