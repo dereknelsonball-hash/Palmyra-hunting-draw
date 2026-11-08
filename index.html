@@ -743,10 +743,19 @@ const gpsDb = createClient("https://hxmkjliyswxphcguwdrh.supabase.co", "sb_publi
   );
 
   if (error) {
-    result.textContent = data?.message ||
-      "GPS verification was rejected or could not be completed.";
-    return;
+  let message = data?.message || error.message;
+
+  if (error.context) {
+    try {
+      const details = await error.context.json();
+      message = details.message || details.error || message;
+    } catch (_) {}
   }
+
+  result.textContent = message ||
+    "GPS verification could not be completed.";
+  return;
+}
 
   result.textContent = data?.message ||
     "GPS verification request completed.";
