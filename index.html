@@ -355,6 +355,21 @@ async function refresh() {
     if (assignmentResult.error) throw assignmentResult.error;
 
     participants = peopleResult.data || [];
+    const { data: hunterNames, error: namesError } =
+  await db.rpc("palmyra_hunter_names");
+
+if (namesError) throw namesError;
+
+const namesById = new Map(
+  (hunterNames || []).map(h => [h.id, h.display_name])
+);
+
+participants = participants.map(p => ({
+  ...p,
+  memberships: {
+    display_name: namesById.get(p.membership_id) || null
+  }
+}));
     assignments = assignmentResult.data || [];
 
     render();
