@@ -82,7 +82,7 @@ button:disabled { opacity: .5; cursor: not-allowed; }
   margin-top: 7px;
 }
 #timer { font-size: 40px; color: #e8c976; }
-.area, .hunter {
+      .area, .hunter {
   padding: 11px 13px;
   border-bottom: 1px solid #45614b;
 }
@@ -342,7 +342,7 @@ async function refresh() {
     const [peopleResult, assignmentResult] =
       await Promise.all([
         db.from("draw_participants")
-          .select("membership_id,draw_position,skipped_rounds,gps_verified_at")
+          .select("membership_id,draw_position,skipped_rounds,gps_verified_at,memberships(display_name)")
           .eq("session_id", session.id)
           .order("draw_position"),
         db.from("area_assignments")
@@ -372,8 +372,11 @@ function render() {
     ? session.status.toUpperCase() : "NONE";
   $("round").textContent =
     session?.current_round ?? "—";
-  $("position").textContent =
-    session?.current_position ?? "—";
+  $("position").textContent = session
+  ? (participants.find(p =>
+      p.draw_position === session.current_position
+    )?.memberships?.display_name || "—")
+  : "—";
 
   if (session) {
     $("sessionDetails").textContent =
@@ -619,7 +622,7 @@ function renderHunters() {
       const skipped =
         (hunter.skipped_rounds || []).includes(round);
 
-      let text = "#" + hunter.draw_position;
+      let text = hunter.memberships?.display_name || "#" + hunter.draw_position;
       if (isMe) text += " — YOU";
       if (current) text += " — CURRENT TURN";
       if (selected) text += " — Selected";
