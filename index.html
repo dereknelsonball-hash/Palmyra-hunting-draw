@@ -387,10 +387,13 @@ function render() {
     ? session.status.toUpperCase() : "NONE";
   $("round").textContent =
     session?.current_round ?? "—";
-  $("position").textContent = session
-  ? (participants.find(p =>
-      p.draw_position === session.current_position
-    )?.memberships?.display_name || "—")
+  const currentHunter = participants.find(
+  p => p.draw_position === session?.current_position
+);
+
+$("position").textContent = currentHunter
+  ? "#" + currentHunter.draw_position + " — " +
+    (currentHunter.memberships?.display_name || "Unknown")
   : "—";
 
   if (session) {
