@@ -346,9 +346,9 @@ async function refresh() {
           .eq("session_id", session.id)
           .order("draw_position"),
         db.from("area_assignments")
-          .select("membership_id,area_id,round_number,released_at")
+          .select("id,membership_id,area_id,round_number,released_at")
           .eq("session_id", session.id)
-          .is("released_at", null)
+          
       ]);
 
     if (peopleResult.error) throw peopleResult.error;
