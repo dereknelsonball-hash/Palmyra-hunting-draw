@@ -450,8 +450,9 @@ function renderAreas() {
 
   for (const area of areas) {
     const assigned = assignments.find(a =>
-      a.area_id === area.id
-    );
+  a.area_id === area.id &&
+  a.released_at === null
+);
 
     const description = assigned
       ? area.name + " — Taken (round " +
